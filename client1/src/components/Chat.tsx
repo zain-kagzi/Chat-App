@@ -1,32 +1,30 @@
 import { useEffect, useState } from "react";
 import { socket } from "./socket";
+import { useChat } from "../context/ChatContext";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import Messages from "./Message";
 import MessageInput from "./MessageInput";
 
-type Message = {
-  text: string;
-  senderName: string;
-};
-
-type User = {
-  _id: string;
-  username: string;
-};
 
 export default function Chat() {
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [username, setUsername] = useState("");
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
+  const {
+    username,
+    setUsername,
+    selectedUser,
+    setMessages,
+    setUsers,
+  } = useChat();
 
+  const [message, setMessage] = useState("");
+
+  // ✅ get username
   useEffect(() => {
     const name = localStorage.getItem("username") || "Anonymous";
     setUsername(name);
   }, []);
 
+  // ✅ fetch users
   useEffect(() => {
     if (!username) return;
 
@@ -34,7 +32,7 @@ export default function Chat() {
       .then((res) => res.json())
       .then((data) => {
         const filtered = data.filter(
-          (user: User) => user.username !== username
+          (user: any) => user.username !== username
         );
         setUsers(filtered);
       });
@@ -43,6 +41,7 @@ export default function Chat() {
   const getRoomId = (u1: string, u2: string) =>
     [u1, u2].sort().join("_");
 
+  // ✅ join room + fetch messages
   useEffect(() => {
     if (!selectedUser || !username) return;
 
@@ -61,6 +60,7 @@ export default function Chat() {
       });
   }, [selectedUser, username]);
 
+  // ✅ receive messages
   useEffect(() => {
     if (!selectedUser || !username) return;
 
@@ -79,6 +79,7 @@ export default function Chat() {
     };
   }, [selectedUser, username]);
 
+  // ✅ send message
   const sendMessage = () => {
     if (!message.trim() || !selectedUser) return;
 
@@ -94,20 +95,15 @@ export default function Chat() {
 
   return (
     <div className="flex h-screen bg-gray-900">
-      <Sidebar
-        users={users}
-        selectedUser={selectedUser}
-        setSelectedUser={setSelectedUser}
-      />
+      <Sidebar />
 
       <div className="flex-1 flex flex-col">
-        <Header selectedUser={selectedUser} username={username} />
-        <Messages messages={messages} username={username} />
+        <Header />
+        <Messages />
         <MessageInput
           message={message}
           setMessage={setMessage}
           sendMessage={sendMessage}
-          selectedUser={selectedUser}
         />
       </div>
     </div>

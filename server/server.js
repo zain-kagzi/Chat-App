@@ -19,7 +19,7 @@ app.use("/api/messages", messageRoutes);
 // ✅ MongoDB
 const mongoose = require("mongoose");
 mongoose
-  .connect("mongodb://localhost:27017/chat-app")
+  .connect(process.env.MONGO_URL)
   .then(() => console.log("DB connected"))
   .catch((err) => console.log(err));
 
@@ -89,6 +89,6 @@ app.get("/", (req, res) => {
 });
 
 // ✅ Start server
-server.listen(5000, () => {
+server.listen(process.env.PORT, () => {
   console.log("Server running on port 5000");
 });

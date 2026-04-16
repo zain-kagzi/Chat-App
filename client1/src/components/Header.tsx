@@ -1,29 +1,40 @@
-type Props = {
-  selectedUser: string | null;
-  username: string;
-};
+import { useChat } from "../context/ChatContext";
+import { Phone, Video,ArrowLeft } from "lucide-react";
 
-export default function Header({ selectedUser, username }: Props) {
+export default function Header() {
+  const { selectedUser } = useChat();
+
   return (
-    <div className="flex justify-between items-center bg-gray-700 text-white p-4">
-      <div>
-        {selectedUser ? `Chat with ${selectedUser}` : "Select a user"}
+    <div className="flex items-center justify-between bg-gray-100 px-4 py-3 border-b">
+      {/* Left Section */}
+      <div className="flex items-center gap-3">
+        <ArrowLeft className="w-5 h-5 cursor-pointer" />
+        {/* Avatar */}
+        <div className="relative">
+          <img
+            src={`https://i.pravatar.cc/150?u=${selectedUser}`}
+            alt="avatar"
+            className="w-10 h-10 rounded-full"
+          />
+          <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+        </div>
+
+        {/* Name + Status */}
+        <div>
+          <h2 className="text-sm font-semibold">
+            {selectedUser || "Select User"}
+          </h2>
+          <p className="text-xs text-green-500">
+            {selectedUser ? "Online" : ""}
+          </p>
+        </div>
       </div>
 
-      <div className="flex gap-5 items-center">
-        <h2>💬 Chat App</h2>
-        <span>{username}</span>
+      {/* Right Section */}
+      <div className="flex items-center gap-4">
+        <Phone className="w-5 h-5 text-gray-600 cursor-pointer" />
+        <Video className="w-5 h-5 text-gray-600 cursor-pointer" />
       </div>
-
-      <button
-        onClick={() => {
-          localStorage.removeItem("token");
-          window.location.reload();
-        }}
-        className="bg-red-500 px-3 py-1 rounded"
-      >
-        Logout
-      </button>
     </div>
   );
 }
