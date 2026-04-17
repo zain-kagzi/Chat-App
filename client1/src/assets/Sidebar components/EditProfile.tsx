@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useChat } from "../../context/ChatContext";
 
 type Props = {
   isOpen: boolean;
@@ -13,7 +14,8 @@ export default function EditProfileModal({
   currentName,
   onSave,
 }: Props) {
-  const [name, setName] = useState(currentName);
+  const { user } = useChat();
+  const [name, setName] = useState(user?.username || "");
   const [avatar, setAvatar] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
 
@@ -34,16 +36,14 @@ export default function EditProfileModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      
       <div className="bg-white rounded-2xl w-[320px] p-5 shadow-lg">
-        
         {/* Title */}
         <h2 className="text-lg font-semibold mb-4">Edit Profile</h2>
 
         {/* Avatar */}
         <div className="flex flex-col items-center gap-2 mb-4">
           <img
-            src={preview || `https://i.pravatar.cc/150?u=${currentName}`}
+            src={preview || `http://localhost:5000/uploads/${user?.profilePic}`}
             className="w-20 h-20 rounded-full object-cover"
           />
 
@@ -69,10 +69,7 @@ export default function EditProfileModal({
 
         {/* Buttons */}
         <div className="flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="px-3 py-1 rounded bg-gray-200"
-          >
+          <button onClick={onClose} className="px-3 py-1 rounded bg-gray-200">
             Cancel
           </button>
           <button

@@ -6,37 +6,29 @@ import Header from "./Header";
 import Messages from "./Message";
 import MessageInput from "./MessageInput";
 
-
 export default function Chat() {
-  const {
-    username,
-    setUsername,
-    selectedUser,
-    setMessages,
-    setUsers,
-  } = useChat();
+  const { user, selectedUser, setMessages, setUsers } = useChat();
+
+  const username = user?.username;
 
   const [message, setMessage] = useState("");
 
-  // ✅ get username
-  useEffect(() => {
-    const name = localStorage.getItem("username") || "Anonymous";
-    setUsername(name);
-  }, []);
+  console.log("SELECTED USER:", selectedUser);
 
   // ✅ fetch users
   useEffect(() => {
-    if (!username) return;
+    if (!user) return;
 
     fetch("http://localhost:5000/api/auth/users")
       .then((res) => res.json())
       .then((data) => {
         const filtered = data.filter(
-          (user: any) => user.username !== username
+          (u: any) => u.username !== user.username
         );
         setUsers(filtered);
-      });
-  }, [username]);
+      })
+      .catch((err) => console.error(err));
+  }, [user]); // 🔥 FIX
 
   const getRoomId = (u1: string, u2: string) =>
     [u1, u2].sort().join("_");
@@ -45,7 +37,12 @@ export default function Chat() {
   useEffect(() => {
     if (!selectedUser || !username) return;
 
-    const roomId = getRoomId(username, selectedUser);
+    const receiverName =
+      typeof selectedUser === "string"
+        ? selectedUser
+        : selectedUser.username;
+
+    const roomId = getRoomId(username, receiverName);
 
     socket.emit("joinPrivateRoom", { roomId });
 
@@ -64,9 +61,14 @@ export default function Chat() {
   useEffect(() => {
     if (!selectedUser || !username) return;
 
-    const handleMessage = (msg: any) => {
-      const currentRoom = getRoomId(username, selectedUser);
+    const receiverName =
+      typeof selectedUser === "string"
+        ? selectedUser
+        : selectedUser.username;
 
+    const currentRoom = getRoomId(username, receiverName);
+
+    const handleMessage = (msg: any) => {
       if (msg.roomId === currentRoom) {
         setMessages((prev) => [...prev, msg]);
       }
@@ -81,17 +83,34 @@ export default function Chat() {
 
   // ✅ send message
   const sendMessage = () => {
-    if (!message.trim() || !selectedUser) return;
+    if (!message.trim() || !selectedUser || !user) return;
 
-    const roomId = getRoomId(username, selectedUser);
+    const receiverName =
+      typeof selectedUser === "string"
+        ? selectedUser
+        : selectedUser.username;
+
+    const roomId = getRoomId(user.username, receiverName);
 
     socket.emit("sendPrivateMessage", {
       roomId,
-      message: { text: message, senderName: username },
+      message: {
+        text: message,
+        senderName: user.username,
+      },
     });
 
     setMessage("");
   };
+
+  // ✅ safety UI
+  if (!user) {
+    return (
+      <div className="text-white flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-900">

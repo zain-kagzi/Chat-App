@@ -12,9 +12,12 @@ app.use(express.json());
 // ✅ Routes
 const authRoutes = require("./routes/auth");
 const messageRoutes = require("./routes/messages");
+const userRoutes = require("./routes/user");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/uploads", express.static("uploads"));
+app.use("/api/user",userRoutes)
 
 // ✅ MongoDB
 const mongoose = require("mongoose");

@@ -13,7 +13,13 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema({
   username: String,
   email: { type: String, unique: true },
-  password: String
+  password: String,
+  profilePic: {
+  type: String,
+  default: null,
+},
 });
+
+
 
 module.exports = mongoose.model("User", userSchema);

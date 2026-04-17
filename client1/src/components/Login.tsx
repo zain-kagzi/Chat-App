@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useChat } from "../context/ChatContext";
 
 type Props = {
   onLogin: () => void;
@@ -14,7 +15,16 @@ const CornerDecor = ({ flip = false }: { flip?: boolean }) => (
   >
     <rect x="0" y="18" width="30" height="4" fill="#222" />
     <rect x="30" y="0" width="4" height="22" fill="#222" />
-    <rect x="34" y="0" width="40" height="18" rx="4" fill="#1c1c1c" stroke="#2a2a2a" strokeWidth="0.5" />
+    <rect
+      x="34"
+      y="0"
+      width="40"
+      height="18"
+      rx="4"
+      fill="#1c1c1c"
+      stroke="#2a2a2a"
+      strokeWidth="0.5"
+    />
     <circle cx="34" cy="18" r="3" fill="#2e2e2e" />
     <rect x="38" y="6" width="4" height="6" rx="1" fill="#2a2a2a" />
     <rect x="44" y="6" width="4" height="6" rx="1" fill="#2a2a2a" />
@@ -32,7 +42,16 @@ const CornerDecorBottom = ({ flip = false }: { flip?: boolean }) => (
   >
     <rect x="0" y="18" width="30" height="4" fill="#222" />
     <rect x="30" y="18" width="4" height="22" fill="#222" />
-    <rect x="34" y="22" width="40" height="18" rx="4" fill="#1c1c1c" stroke="#2a2a2a" strokeWidth="0.5" />
+    <rect
+      x="34"
+      y="22"
+      width="40"
+      height="18"
+      rx="4"
+      fill="#1c1c1c"
+      stroke="#2a2a2a"
+      strokeWidth="0.5"
+    />
     <circle cx="34" cy="22" r="3" fill="#2e2e2e" />
     <rect x="38" y="28" width="4" height="6" rx="1" fill="#2a2a2a" />
     <rect x="44" y="28" width="4" height="6" rx="1" fill="#2a2a2a" />
@@ -45,7 +64,7 @@ export default function Login({ onLogin, switchToRegister }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  
+  const { setUser } = useChat();
 
   const handleLogin = async () => {
     setLoading(true);
@@ -57,8 +76,17 @@ export default function Login({ onLogin, switchToRegister }: Props) {
       });
       const data = await res.json();
       if (data.token) {
+
+        const userData = {
+          _id: data._id,
+          username: data.username,
+          profilePic: data.profilePic,
+        };
+
         localStorage.setItem("token", data.token);
-        localStorage.setItem("username", data.username);
+        localStorage.setItem("user", JSON.stringify(userData));
+
+        setUser(userData);
         onLogin();
       } else {
         alert(data.message);
@@ -73,7 +101,6 @@ export default function Login({ onLogin, switchToRegister }: Props) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0d0d0d] relative overflow-hidden px-4 py-10">
-
       {/* Corner Decorations — hidden on very small screens */}
       <div className="hidden sm:block absolute top-12 left-4 w-20 h-10">
         <CornerDecor />
@@ -90,18 +117,33 @@ export default function Login({ onLogin, switchToRegister }: Props) {
 
       {/* Card */}
       <div className="w-full max-w-sm bg-[#1a1a1a] border border-[#2e2e2e] rounded-2xl px-6 py-8 z-10">
-
         {/* Logo */}
         <div className="flex flex-col items-center gap-2 mb-5">
           <div className="flex items-center gap-2">
-            <span className="text-[#2e2e2e] text-xs tracking-widest">· · · · ·</span>
+            <span className="text-[#2e2e2e] text-xs tracking-widest">
+              · · · · ·
+            </span>
             <div className="w-11 h-11 rounded-full bg-[#111] border border-[#2a2a2a] flex items-center justify-center">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="9" stroke="#3b82f6" strokeWidth="1.5" />
-                <path d="M8 12 Q12 6 16 12" stroke="#60a5fa" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="9"
+                  stroke="#3b82f6"
+                  strokeWidth="1.5"
+                />
+                <path
+                  d="M8 12 Q12 6 16 12"
+                  stroke="#60a5fa"
+                  strokeWidth="1.5"
+                  fill="none"
+                  strokeLinecap="round"
+                />
               </svg>
             </div>
-            <span className="text-[#2e2e2e] text-xs tracking-widest">· · · · ·</span>
+            <span className="text-[#2e2e2e] text-xs tracking-widest">
+              · · · · ·
+            </span>
           </div>
         </div>
 
@@ -123,8 +165,12 @@ export default function Login({ onLogin, switchToRegister }: Props) {
         <div className="relative mb-2.5">
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555]"
-            width="15" height="15" viewBox="0 0 24 24"
-            fill="none" stroke="currentColor" strokeWidth="1.5"
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
           >
             <rect x="3" y="5" width="18" height="14" rx="2" />
             <path d="M3 7l9 6 9-6" />
@@ -142,8 +188,12 @@ export default function Login({ onLogin, switchToRegister }: Props) {
         <div className="relative mb-3">
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555]"
-            width="15" height="15" viewBox="0 0 24 24"
-            fill="none" stroke="currentColor" strokeWidth="1.5"
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
           >
             <rect x="5" y="11" width="14" height="10" rx="2" />
             <path d="M8 11V7a4 4 0 018 0v4" />
@@ -165,7 +215,6 @@ export default function Login({ onLogin, switchToRegister }: Props) {
         >
           {loading ? "Logging in..." : "Login"}
         </button>
-        
       </div>
     </div>
   );

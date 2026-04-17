@@ -7,7 +7,7 @@ const Bottombutton = () => {
   const [open, setOpen] = useState(false);
   const [openProfileModal, setOpenProfileModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { username } = useChat();
+  const { username, setUser, user } = useChat();
 
   useEffect(() => {
     function handleClickOutside(e: any) {
@@ -18,6 +18,7 @@ const Bottombutton = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+  console.log(user)
   return (
     //   {/* Bottom Buttons */}
     <div className="flex justify-around items-center pt-3 border-t mt-2 relative">
@@ -39,7 +40,7 @@ const Bottombutton = () => {
               {/* Left: Profile Info */}
               <div className="flex items-center gap-3">
                 <img
-                  src={`https://i.pravatar.cc/150?u=${username}`}
+                  src={`http://localhost:5000/uploads/${user?.profilePic}`}
                   className="w-10 h-10 rounded-full"
                 />
                 <div>
@@ -71,11 +72,35 @@ const Bottombutton = () => {
               isOpen={openProfileModal}
               onClose={() => setOpenProfileModal(false)}
               currentName={username}
-              onSave={(name, avatar) => {
-                console.log("New Name:", name);
-                console.log("Avatar:", avatar);
+              onSave={async (name, avatar) => {
+                try {
+                  const formData = new FormData();
+                  formData.append("name", name);
 
-                // 👉 yaha API call ya context update karna
+                  if (avatar) {
+                    formData.append("avatar", avatar);
+                  }
+
+                  const res = await fetch(
+                    "http://localhost:5000/api/user/update-profile",
+                    {
+                      method: "PUT",
+                      headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                      },
+                      body: formData,
+                    },
+                  );
+
+                  const data = await res.json();
+
+                  console.log(data);
+
+                  // 👉 UI update
+                  setUser(data);
+                } catch (err) {
+                  console.error(err);
+                }
               }}
             />
           </div>

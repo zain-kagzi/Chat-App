@@ -36,7 +36,7 @@ export default function Sidebar() {
         {users.map((user: any) => (
           <div
             key={user._id}
-            onClick={() => setSelectedUser(user.username)}
+            onClick={() => setSelectedUser(user)}
             className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition ${
               selectedUser === user.username
                 ? "bg-white shadow"
@@ -45,7 +45,7 @@ export default function Sidebar() {
           >
             <div className="flex items-center gap-3">
               <img
-                src={`https://i.pravatar.cc/150?u=${user._id}`}
+                src={`http://localhost:5000/uploads/${user?.profilePic}`}
                 className="w-10 h-10 rounded-full"
               />
               <div>
