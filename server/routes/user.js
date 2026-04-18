@@ -1,54 +1,48 @@
-// import { upload } from "../middleware/upload.js";
-// import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
-// import User from "../models/User.js";
 const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const multer = require("multer");
+const { authMiddleware } = require("../middleware/auth");
 
-router.put("/update-profile", async (req, res) => {
-  try {
-    const userId = req.user.id; // JWT se aayega
-    const { name } = req.body;
-
-    let updateData = {
-      username: name,
-    };
-
-    // 👉 Upload image to cloudinary
-    if (req.file) {
-      const result = await uploadToCloudinary(req.file.buffer);
-
-      updateData.avatar = result.secure_url; // 🔥 main cheez
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      updateData,
-      { new: true }
-    );
-
-    res.json(updatedUser);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Error updating profile" });
-  }
+// ✅ MULTER CONFIG
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
 });
 
-// Get user loggedin 
+const upload = multer({ storage });
 
-router.get("/loggedInUser",async(req,res)=>{
-  try {
-    const users = await User
-    console.log(users)
-    res.json(users)
+// ✅ UPDATE PROFILE ROUTE
+router.put(
+  "/update-profile",
+  authMiddleware,
+  upload.single("profilePic"),
+  async (req, res) => {
+    try {
+      const userId = req.user.userId;
 
-  } catch (error) {
-    console.log(err);
-    res.status(500).json({ message: "Error updating profile" });
+      const updateData = {
+        username: req.body.username,
+      };
+
+      if (req.file) {
+        updateData.profilePic = req.file.filename;
+      }
+
+      const user = await User.findByIdAndUpdate(userId, updateData, {
+        new: true,
+      });
+
+      res.json({ user });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Update failed" });
+    }
   }
-})
+);
 
 module.exports = router;
