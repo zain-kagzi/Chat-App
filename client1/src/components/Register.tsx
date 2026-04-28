@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import imageCompression from "browser-image-compression";
 
 type Props = {
   onRegister: () => void;
@@ -9,56 +10,70 @@ export default function Register({ switchToLogin }: Props) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [showPassword, setShowPassword] = useState(false);
 
-  // ✅ NEW STATES
   const [profilePic, setProfilePic] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
-  // ✅ IMAGE HANDLER
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ✅ cleanup memory
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setProfilePic(file);
-      setPreview(URL.createObjectURL(file));
+
+    if (!file) return;
+
+    try {
+      const options = {
+        maxSizeMB: 1, // 🔥 final size (1MB)
+        maxWidthOrHeight: 800, // 🔥 resize bhi karega
+        useWebWorker: true,
+      };
+
+      const compressedFile = await imageCompression(file, options);
+
+      console.log("Original:", file.size / 1024, "KB");
+      console.log("Compressed:", compressedFile.size / 1024, "KB");
+
+      setProfilePic(compressedFile);
+      setPreview(URL.createObjectURL(compressedFile));
+    } catch (err) {
+      console.error("Compression error:", err);
     }
   };
 
   const handleRegister = async () => {
     try {
-      // ✅ validation
       if (!username || !email || !password) {
         alert("All fields are required");
         return;
       }
 
-      // ✅ form data
       const formData = new FormData();
       formData.append("username", username);
       formData.append("email", email);
       formData.append("password", password);
 
+      // ✅ only append if selected
       if (profilePic) {
         formData.append("profilePic", profilePic);
       }
-
-      console.log("Sending data...");
 
       const res = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
         body: formData,
       });
 
-      // ✅ safe JSON parse
       let data;
       try {
         data = await res.json();
       } catch {
         throw new Error("Invalid server response");
       }
-
-      console.log("Response:", data);
 
       if (res.ok) {
         alert("Registered successfully! Please login.");
@@ -71,10 +86,10 @@ export default function Register({ switchToLogin }: Props) {
       alert(err.message || "Registration failed");
     }
   };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f0ede8] p-4 font-sans">
       <div className="flex w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl bg-[#faf8f4]">
-        {/* LEFT */}
         <div className="flex-1 p-8 sm:p-12 flex flex-col justify-center bg-linear-to-br from-[#fdf8ee] to-[#f5e8b0]">
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">
             Create an account
@@ -83,13 +98,12 @@ export default function Register({ switchToLogin }: Props) {
           {/* ✅ PROFILE PIC */}
           <div className="mb-5 flex flex-col items-center">
             <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 mb-2">
-              {preview ? (
-                <img src={preview} className="w-full h-full object-cover" />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-400 text-xs">
-                  No Image
-                </div>
-              )}
+              <img
+                src={
+                  preview || "https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg" // ✅ default image
+                }
+                className="w-full h-full object-cover"
+              />
             </div>
 
             <input

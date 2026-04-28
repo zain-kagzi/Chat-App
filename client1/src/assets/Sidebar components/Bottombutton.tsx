@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, Phone, SlidersHorizontal } from "lucide-react";
-import { useChat } from "../../context/ChatContext";
 import EditProfileModal from "./EditProfile";
+import { useChat } from "../../hooks/useChat";
 
 const Bottombutton = () => {
   const [open, setOpen] = useState(false);
   const [openProfileModal, setOpenProfileModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { username, user } = useChat();
+  const { user } = useChat();
 
   useEffect(() => {
-    function handleClickOutside(e: any) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
@@ -41,13 +41,13 @@ const Bottombutton = () => {
                 <img
                   src={
                     user?.profilePic
-                      ? `http://localhost:5000/uploads/${user.profilePic}?t=${Date.now()}`
+                      ? user.profilePic
                       : "https://i.pravatar.cc/150"
                   }
                   className="w-10 h-10 rounded-full object-cover"
                 />
                 <div>
-                  <p className="text-sm font-semibold">{username}</p>
+                  <p className="text-sm font-semibold">{user?.username}</p>
                   <p className="text-xs text-gray-500">Online</p>
                 </div>
               </div>

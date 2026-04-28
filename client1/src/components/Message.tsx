@@ -1,13 +1,14 @@
-import { useChat } from "../context/ChatContext";
+import { useChat } from "../hooks/useChat";
+
 
 export default function Messages() {
-  const { messages, username } = useChat();
+  const { messages, user } = useChat();
 
   return (
     <div className="flex-1 overflow-y-auto p-4 bg-gray-100 space-y-3">
       
       {messages.map((msg: any, index: number) => {
-        const isMe = msg.senderName === username;
+        const isMe = msg.senderName === user?._id;
 
         return (
           <div

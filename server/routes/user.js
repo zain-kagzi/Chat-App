@@ -2,19 +2,9 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const multer = require("multer");
+const upload = require("../middleware/upload");
 const { authMiddleware } = require("../middleware/auth");
-
-// ✅ MULTER CONFIG
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-
-const upload = multer({ storage });
+const cloudinary = require("../config/cloudinary");
 
 // ✅ UPDATE PROFILE ROUTE
 router.put(
@@ -25,24 +15,37 @@ router.put(
     try {
       const userId = req.user.userId;
 
-      const updateData = {
-        username: req.body.username,
-      };
+      let updateData = {};
 
+      if (req.body.username) {
+        updateData.username = req.body.username;
+      }
+
+      // ✅ upload to cloudinary (same as register)
       if (req.file) {
-        updateData.profilePic = req.file.filename;
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "chat-app-profiles" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            },
+          );
+          stream.end(req.file.buffer);
+        });
+
+        updateData.profilePic = result.secure_url;
       }
 
       const user = await User.findByIdAndUpdate(userId, updateData, {
-        new: true,
-      });
+        returnDocument: "after",
+      }).select("-password");
 
       res.json({ user });
     } catch (err) {
-      console.error(err);
+      console.error("UPDATE ERROR:", err);
       res.status(500).json({ message: "Update failed" });
     }
-  }
+  },
 );
-
 module.exports = router;

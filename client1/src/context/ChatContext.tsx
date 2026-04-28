@@ -1,25 +1,26 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useState } from "react";  
 
-type Message = {
+export type User = {
+  _id: string;
+  username: string;
+  profilePic?: string;
+  roomId:string;
+};
+
+export type Message = {
+  _id?: string;
   text: string;
   senderName: string;
   roomId?: string;
+  createdAt?: string;
 };
 
-type User = {
-  _id: string;
-  username: string;
-  profilePic: string; 
-};
-
-type ChatContextType = {
+export type ChatContextType = {
   user: User | null;
-  setUser: (user: User) => void;
+  setUser: (user: User | null) => void;
 
-  username: string;
-
-  selectedUser: User | null; // ✅ FIX
-  setSelectedUser: (user: User | null) => void; // ✅ FIX
+  selectedUser: User | null;
+  setSelectedUser: (user: User | null) => void;
 
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
@@ -29,43 +30,40 @@ type ChatContextType = {
 };
 
 const ChatContext = createContext<ChatContextType | null>(null);
-
-export const useChat = () => {
-  const context = useContext(ChatContext);
-  if (!context) throw new Error("useChat must be used inside provider");
-  return context;
-};
+export default ChatContext;
 
 export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUserState] = useState<User | null>(null);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null); // ✅ FIX
+  const [user, setUserState] = useState<User | null>(() => {
+  try {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  } catch {
+    return null;
+  }
+});
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [users, setUsers] = useState<User[]>([]);
 
-  // ✅ persist user in localStorage
-  const setUser = (userData: User) => {
+  const setUser = (userData: User | null) => {
     setUserState(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
+
+    if (userData) {
+      localStorage.setItem("user", JSON.stringify(userData));
+    } else {
+      localStorage.removeItem("user");
+    }
   };
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUserState(JSON.parse(storedUser));
-    }
-  }, []);
-
+  
 
   return (
     <ChatContext.Provider
       value={{
         user,
         setUser,
-        username: user?.username || "",
-
         selectedUser,
         setSelectedUser,
-
         messages,
         setMessages,
         users,

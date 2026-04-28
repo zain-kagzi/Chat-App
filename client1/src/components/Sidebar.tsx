@@ -1,9 +1,9 @@
 import Bottombutton from "../assets/Sidebar components/Bottombutton";
-import { useChat } from "../context/ChatContext";
 import {
   Search,
   Edit,
 } from "lucide-react";
+import { useChat } from "../hooks/useChat";
 
 export default function Sidebar() {
   const { users, selectedUser, setSelectedUser } = useChat();
@@ -13,7 +13,7 @@ export default function Sidebar() {
   
 
   return (
-    <div className="w-[320px] h-screen bg-gray-100 flex flex-col p-4 shadow-lg rounded-2xl relative">
+    <div className="w-[320px] h-screen bg-gray-100 flex flex-col p-4 shadow-lg relative">
       
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
@@ -45,7 +45,7 @@ export default function Sidebar() {
           >
             <div className="flex items-center gap-3">
               <img
-                src={`http://localhost:5000/uploads/${user?.profilePic}`}
+                src={user?.profilePic}
                 className="w-10 h-10 rounded-full"
               />
               <div>

@@ -1,20 +1,16 @@
 import { useEffect, useState } from "react";
 import { socket } from "./socket";
-import { useChat } from "../context/ChatContext";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import Messages from "./Message";
 import MessageInput from "./MessageInput";
+import { useChat } from "../hooks/useChat";
 
 export default function Chat() {
   const { user, selectedUser, setMessages, setUsers } = useChat();
-
-  const username = user?.username;
-
   const [message, setMessage] = useState("");
 
   console.log("SELECTED USER:", selectedUser);
-
   // ✅ fetch users
   useEffect(() => {
     if (!user) return;
@@ -23,26 +19,22 @@ export default function Chat() {
       .then((res) => res.json())
       .then((data) => {
         const filtered = data.filter(
-          (u: any) => u.username !== user.username
+          (u: any) => u._id !== user._id // 🔥 FIX (username nahi, id compare)
         );
         setUsers(filtered);
       })
       .catch((err) => console.error(err));
-  }, [user]); // 🔥 FIX
+  }, [user]);
 
-  const getRoomId = (u1: string, u2: string) =>
-    [u1, u2].sort().join("_");
+  // ✅ 🔥 ROOM ID using USER roomId
+  const getRoomId = (id1: string, id2: string) =>
+    [id1, id2].sort().join("_");
 
   // ✅ join room + fetch messages
   useEffect(() => {
-    if (!selectedUser || !username) return;
+    if (!selectedUser || !user) return;
 
-    const receiverName =
-      typeof selectedUser === "string"
-        ? selectedUser
-        : selectedUser.username;
-
-    const roomId = getRoomId(username, receiverName);
+    const roomId = getRoomId(user.roomId, selectedUser.roomId); // 🔥 FIX
 
     socket.emit("joinPrivateRoom", { roomId });
 
@@ -55,18 +47,13 @@ export default function Chat() {
         }));
         setMessages(formatted);
       });
-  }, [selectedUser, username]);
+  }, [selectedUser, user]);
 
   // ✅ receive messages
   useEffect(() => {
-    if (!selectedUser || !username) return;
+    if (!selectedUser || !user) return;
 
-    const receiverName =
-      typeof selectedUser === "string"
-        ? selectedUser
-        : selectedUser.username;
-
-    const currentRoom = getRoomId(username, receiverName);
+    const currentRoom = getRoomId(user.roomId, selectedUser.roomId);
 
     const handleMessage = (msg: any) => {
       if (msg.roomId === currentRoom) {
@@ -79,24 +66,19 @@ export default function Chat() {
     return () => {
       socket.off("receivePrivateMessage", handleMessage);
     };
-  }, [selectedUser, username]);
+  }, [selectedUser, user]);
 
   // ✅ send message
   const sendMessage = () => {
     if (!message.trim() || !selectedUser || !user) return;
 
-    const receiverName =
-      typeof selectedUser === "string"
-        ? selectedUser
-        : selectedUser.username;
-
-    const roomId = getRoomId(user.username, receiverName);
+    const roomId = getRoomId(user.roomId, selectedUser.roomId);
 
     socket.emit("sendPrivateMessage", {
       roomId,
       message: {
         text: message,
-        senderName: user.username,
+        senderName: user._id, // UI ke liye
       },
     });
 

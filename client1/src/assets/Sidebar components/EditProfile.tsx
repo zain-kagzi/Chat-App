@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useChat } from "../../context/ChatContext";
+import imageCompression from "browser-image-compression";
+import { useChat } from "../../hooks/useChat";
 
 type Props = {
   isOpen: boolean;
@@ -17,7 +18,8 @@ export default function EditProfileModal({ isOpen, onClose }: Props) {
     setName(user?.username || "");
   }, [user]);
 
-  // ✅ preview cleanup
+
+  // ✅ cleanup preview
   useEffect(() => {
     return () => {
       if (preview) URL.revokeObjectURL(preview);
@@ -26,13 +28,29 @@ export default function EditProfileModal({ isOpen, onClose }: Props) {
 
   if (!isOpen) return null;
 
-  const handleImageChange = (e: any) => {
-    const file = e.target.files[0];
-    if (file) {
-      setAvatar(file);
-      setPreview(URL.createObjectURL(file));
-    }
-  };
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+  
+      if (!file) return;
+  
+      try {
+        const options = {
+          maxSizeMB: 1, // 🔥 final size (1MB)
+          maxWidthOrHeight: 800, // 🔥 resize bhi karega
+          useWebWorker: true,
+        };
+  
+        const compressedFile = await imageCompression(file, options);
+  
+        console.log("Original:", file.size / 1024, "KB");
+        console.log("Compressed:", compressedFile.size / 1024, "KB");
+  
+        setAvatar(compressedFile);
+        setPreview(URL.createObjectURL(compressedFile));
+      } catch (err) {
+        console.error("Compression error:", err);
+      }
+    };
 
   const handleSave = async () => {
     try {
@@ -64,6 +82,7 @@ export default function EditProfileModal({ isOpen, onClose }: Props) {
       const data = await res.json();
 
       if (res.ok) {
+        // ✅ Cloudinary URL already comes from backend
         setUser(data.user);
         localStorage.setItem("user", JSON.stringify(data.user));
         onClose();
@@ -84,10 +103,7 @@ export default function EditProfileModal({ isOpen, onClose }: Props) {
         <div className="flex flex-col items-center gap-2 mb-4">
           <img
             src={
-              preview ||
-              (user?.profilePic
-                ? `http://localhost:5000/uploads/${user.profilePic}?t=${Date.now()}`
-                : "https://i.pravatar.cc/150")
+              preview || user?.profilePic || "https://i.pravatar.cc/150"
             }
             className="w-20 h-20 rounded-full object-cover"
           />

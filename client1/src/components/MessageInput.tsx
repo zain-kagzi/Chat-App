@@ -1,5 +1,6 @@
-import { useChat } from "../context/ChatContext";
+
 import { Mic, MoreHorizontal, Send } from "lucide-react";
+import { useChat } from "../hooks/useChat";
 
 type Props = {
   message: string;
@@ -40,6 +41,7 @@ export default function MessageInput({
       {message.trim() ? (
         <button
           onClick={sendMessage}
+          
           className="bg-green-500 p-2 rounded-full text-white hover:bg-green-600 transition"
         >
           <Send className="w-4 h-4" />

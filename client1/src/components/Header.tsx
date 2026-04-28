@@ -1,5 +1,6 @@
-import { useChat } from "../context/ChatContext";
+
 import { Phone, Video, ArrowLeft } from "lucide-react";
+import { useChat } from "../hooks/useChat";
 
 export default function Header() {
   const { selectedUser } = useChat(); // 👈 loggedIn user bhi le liya
@@ -11,7 +12,7 @@ export default function Header() {
 
   // ✅ profile pic URL
   const profilePic = selectedUser?.profilePic
-    ? `http://localhost:5000/uploads/${selectedUser.profilePic}`
+    ? selectedUser.profilePic
     : `https://i.pravatar.cc/150?u=${name}`; // fallback
 
   return (

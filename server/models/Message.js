@@ -6,7 +6,13 @@ const messageSchema = new mongoose.Schema(
     sender: String,
     text: String,
   },
-  { timestamps: true }
+  { timestamps: true } // createdAt automatically add hoga
+);
+
+// 🔥 TTL INDEX (7 days auto delete)
+messageSchema.index(
+  { createdAt: 1 },
+  { expireAfterSeconds: 60 }
 );
 
 module.exports = mongoose.model("Message", messageSchema);
