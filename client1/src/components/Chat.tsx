@@ -1,51 +1,40 @@
 import { useEffect, useState } from "react";
 import { socket } from "./socket";
-import { useChat } from "../context/ChatContext";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import Messages from "./Message";
 import MessageInput from "./MessageInput";
-
+import { useChat } from "../hooks/useChat";
 
 export default function Chat() {
-  const {
-    username,
-    setUsername,
-    selectedUser,
-    setMessages,
-    setUsers,
-  } = useChat();
-
+  const { user, selectedUser, setMessages, setUsers } = useChat();
   const [message, setMessage] = useState("");
-
-  // ✅ get username
-  useEffect(() => {
-    const name = localStorage.getItem("username") || "Anonymous";
-    setUsername(name);
-  }, []);
+  const [activeView, setActiveView] = useState<"sidebar" | "chat">("sidebar");
 
   // ✅ fetch users
   useEffect(() => {
-    if (!username) return;
+    if (!user) return;
 
     fetch("http://localhost:5000/api/auth/users")
       .then((res) => res.json())
       .then((data) => {
         const filtered = data.filter(
-          (user: any) => user.username !== username
+          (u: any) => u._id !== user._id // 🔥 FIX (username nahi, id compare)
         );
         setUsers(filtered);
-      });
-  }, [username]);
+      })
+      .catch((err) => console.error(err));
+  }, [user]);
 
-  const getRoomId = (u1: string, u2: string) =>
-    [u1, u2].sort().join("_");
+  // ✅ 🔥 ROOM ID using USER roomId
+  const getRoomId = (id1: string, id2: string) =>
+    [id1, id2].sort().join("_");
 
   // ✅ join room + fetch messages
   useEffect(() => {
-    if (!selectedUser || !username) return;
+    if (!selectedUser || !user) return;
 
-    const roomId = getRoomId(username, selectedUser);
+    const roomId = getRoomId(user.roomId, selectedUser.roomId); // 🔥 FIX
 
     socket.emit("joinPrivateRoom", { roomId });
 
@@ -58,15 +47,16 @@ export default function Chat() {
         }));
         setMessages(formatted);
       });
-  }, [selectedUser, username]);
+      setActiveView("chat");
+  }, [selectedUser, user]);
 
   // ✅ receive messages
   useEffect(() => {
-    if (!selectedUser || !username) return;
+    if (!selectedUser || !user) return;
+
+    const currentRoom = getRoomId(user.roomId, selectedUser.roomId);
 
     const handleMessage = (msg: any) => {
-      const currentRoom = getRoomId(username, selectedUser);
-
       if (msg.roomId === currentRoom) {
         setMessages((prev) => [...prev, msg]);
       }
@@ -77,34 +67,77 @@ export default function Chat() {
     return () => {
       socket.off("receivePrivateMessage", handleMessage);
     };
-  }, [selectedUser, username]);
+  }, [selectedUser, user]);
 
   // ✅ send message
   const sendMessage = () => {
-    if (!message.trim() || !selectedUser) return;
+    if (!message.trim() || !selectedUser || !user) return;
 
-    const roomId = getRoomId(username, selectedUser);
+    const roomId = getRoomId(user.roomId, selectedUser.roomId);
 
     socket.emit("sendPrivateMessage", {
       roomId,
-      message: { text: message, senderName: username },
+      message: {
+        text: message,
+        senderName: user._id, // UI ke liye
+      },
     });
 
     setMessage("");
   };
 
-  return (
-    <div className="flex h-screen bg-gray-900">
-      <Sidebar />
+  // ✅ safety UI
+  if (!user) {
+    return (
+      <div className="text-white flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
+  }
 
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <Messages />
-        <MessageInput
-          message={message}
-          setMessage={setMessage}
-          sendMessage={sendMessage}
-        />
+  return (
+    <div className="h-screen flex bg-gray-900">
+
+      {/* 🖥️ DESKTOP */}
+      <div className="hidden md:flex w-full">
+
+        <div className="w-64 border-r">
+          <Sidebar />
+        </div>
+
+        <div className="flex-1 flex flex-col">
+          <Header />
+          <Messages />
+          <MessageInput
+            message={message}
+            setMessage={setMessage}
+            sendMessage={sendMessage}
+          />
+        </div>
+
+      </div>
+
+      {/* 📱 MOBILE */}
+      <div className="flex-1 md:hidden">
+
+        {/* Sidebar */}
+        {activeView === "sidebar" && (
+          <Sidebar />
+        )}
+
+        {/* Chat */}
+        {activeView === "chat" && selectedUser && (
+          <div className="flex flex-col h-full">
+            <Header onBack={() => setActiveView("sidebar")} />
+            <Messages />
+            <MessageInput
+              message={message}
+              setMessage={setMessage}
+              sendMessage={sendMessage}
+            />
+          </div>
+        )}
+
       </div>
     </div>
   );

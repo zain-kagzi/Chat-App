@@ -1,32 +1,31 @@
-// const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 
-// module.exports = function (req, res, next) {
-//   const token = req.header("Authorization");
+const authMiddleware = (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
-//   if (!token) return res.status(401).json({ message: "No token" });
+  // ❌ no header
+  if (!authHeader) {
+    return res.status(401).json({ message: "No token provided" });
+  }
 
-//   try {
-//     const decoded = jwt.verify(token, "secretkey");
-//     req.user = decoded;
-//     next();
-//   } catch {
-//     res.status(401).json({ message: "Invalid token" });
-//   }
-// };
+  // ✅ "Bearer TOKEN" → TOKEN nikaalo
+  const token = authHeader.split(" ")[1];
 
-// middleware/auth.js
-import jwt from "jsonwebtoken";
-
-export const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization;
-
-  if (!token) return res.status(401).json({ message: "No token" });
+  if (!token) {
+    return res.status(401).json({ message: "Invalid token format" });
+  }
 
   try {
     const decoded = jwt.verify(token, "SECRET_KEY");
+
+    // 👉 decoded = { userId, username }
     req.user = decoded;
+
     next();
-  } catch {
-    res.status(401).json({ message: "Invalid token" });
+  } catch (err) {
+    console.error("JWT ERROR:", err);
+    return res.status(401).json({ message: "Invalid token" });
   }
 };
+
+module.exports = { authMiddleware };
