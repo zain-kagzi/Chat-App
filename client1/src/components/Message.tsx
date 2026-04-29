@@ -5,7 +5,7 @@ export default function Messages() {
   const { messages, user } = useChat();
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 bg-gray-100 space-y-3">
+    <div className="flex-1 overflow-y-auto p-4 bg-gray-100 space-y-3 dark:bg-gray-900">
       
       {messages.map((msg: any, index: number) => {
         const isMe = msg.senderName === user?._id;

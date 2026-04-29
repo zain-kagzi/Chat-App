@@ -1,1 +1,4 @@
 @import "tailwindcss";
+
+/* 👇 ye line add karo */
+@custom-variant dark (&:where(.dark, .dark *));

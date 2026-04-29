@@ -21,19 +21,19 @@ const Bottombutton = () => {
   }, []);
 
   return (
-    <div className="flex justify-around items-center pt-3 border-t mt-2 relative">
-      <MessageCircle className="w-5 h-5 text-gray-500 cursor-pointer" />
-      <Phone className="w-5 h-5 text-gray-500 cursor-pointer" />
+    <div className="flex justify-around items-center pt-3 border-t mt-2 relative ">
+      <MessageCircle className="w-5 h-5 text-gray-500 cursor-pointer dark:text-white" />
+      <Phone className="w-5 h-5 text-gray-500 cursor-pointer dark:text-white" />
 
       {/* SETTINGS */}
       <div className="relative" ref={dropdownRef}>
         <SlidersHorizontal
           onClick={() => setOpen(!open)}
-          className="w-5 h-5 text-gray-500 cursor-pointer"
+          className="w-5 h-5 text-gray-500 cursor-pointer dark:text-white"
         />
 
         {open && (
-          <div className="absolute bottom-10 right-0 w-52 bg-white rounded-xl shadow-lg p-3 z-50">
+          <div className="absolute bottom-10 right-0 w-52 bg-white rounded-xl shadow-lg p-3 z-50 dark:bg-gray-700">
             
             {/* PROFILE */}
             <div className="flex items-center justify-between border-b pb-2 mb-2">
@@ -53,7 +53,7 @@ const Bottombutton = () => {
               </div>
 
               <button
-                className="p-1 rounded-full hover:bg-gray-100"
+                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                 onClick={() => setOpenProfileModal(true)}
               >
                 ✏️
@@ -67,7 +67,7 @@ const Bottombutton = () => {
                 localStorage.removeItem("user");
                 window.location.reload();
               }}
-              className="w-full text-left text-sm text-red-500 hover:bg-red-50 px-2 py-1 rounded"
+              className="w-full text-left text-sm text-red-500 hover:bg-red-50 px-2 py-1 rounded dark:hover:bg-gray-800"
             >
               Logout
             </button>

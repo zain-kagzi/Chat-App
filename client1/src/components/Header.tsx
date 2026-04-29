@@ -1,14 +1,11 @@
-
 import { Phone, Video, ArrowLeft } from "lucide-react";
 import { useChat } from "../hooks/useChat";
 
-export default function Header() {
+export default function Header({ onBack  }: { onBack?: () => void }) {
   const { selectedUser } = useChat(); // 👈 loggedIn user bhi le liya
 
   // ✅ selected user ka naam
   const name = selectedUser?.username || "Select User";
-  console.log(name)
-
 
   // ✅ profile pic URL
   const profilePic = selectedUser?.profilePic
@@ -16,11 +13,13 @@ export default function Header() {
     : `https://i.pravatar.cc/150?u=${name}`; // fallback
 
   return (
-    <div className="flex items-center justify-between bg-gray-100 px-4 py-3 border-b">
-      
+    <div className="flex items-center justify-between bg-gray-100 px-4 py-3 border-b dark:bg-gray-900 dark:text-white">
       {/* LEFT */}
       <div className="flex items-center gap-3">
-        <ArrowLeft className="w-5 h-5 cursor-pointer" />
+        
+        <button onClick={onBack} className="md:hidden mr-2">
+          <ArrowLeft className="w-5 h-5 cursor-pointer" />
+        </button>
 
         {/* Avatar */}
         <div className="relative">
@@ -36,9 +35,7 @@ export default function Header() {
 
         {/* Name + Status */}
         <div>
-          <h2 className="text-sm font-semibold">
-            {name}
-          </h2>
+          <h2 className="text-sm font-semibold">{name}</h2>
           <p className="text-xs text-green-500">
             {selectedUser ? "Online" : ""}
           </p>
@@ -47,8 +44,8 @@ export default function Header() {
 
       {/* RIGHT */}
       <div className="flex items-center gap-4">
-        <Phone className="w-5 h-5 text-gray-600 cursor-pointer" />
-        <Video className="w-5 h-5 text-gray-600 cursor-pointer" />
+        <Phone className="w-5 h-5 text-gray-600 cursor-pointer dark:text-white" />
+        <Video className="w-5 h-5 text-gray-600 cursor-pointer dark:text-white" />
       </div>
     </div>
   );

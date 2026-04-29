@@ -9,8 +9,8 @@ import { useChat } from "../hooks/useChat";
 export default function Chat() {
   const { user, selectedUser, setMessages, setUsers } = useChat();
   const [message, setMessage] = useState("");
+  const [activeView, setActiveView] = useState<"sidebar" | "chat">("sidebar");
 
-  console.log("SELECTED USER:", selectedUser);
   // ✅ fetch users
   useEffect(() => {
     if (!user) return;
@@ -47,6 +47,7 @@ export default function Chat() {
         }));
         setMessages(formatted);
       });
+      setActiveView("chat");
   }, [selectedUser, user]);
 
   // ✅ receive messages
@@ -95,17 +96,48 @@ export default function Chat() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-900">
-      <Sidebar />
+    <div className="h-screen flex bg-gray-900">
 
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <Messages />
-        <MessageInput
-          message={message}
-          setMessage={setMessage}
-          sendMessage={sendMessage}
-        />
+      {/* 🖥️ DESKTOP */}
+      <div className="hidden md:flex w-full">
+
+        <div className="w-64 border-r">
+          <Sidebar />
+        </div>
+
+        <div className="flex-1 flex flex-col">
+          <Header />
+          <Messages />
+          <MessageInput
+            message={message}
+            setMessage={setMessage}
+            sendMessage={sendMessage}
+          />
+        </div>
+
+      </div>
+
+      {/* 📱 MOBILE */}
+      <div className="flex-1 md:hidden">
+
+        {/* Sidebar */}
+        {activeView === "sidebar" && (
+          <Sidebar />
+        )}
+
+        {/* Chat */}
+        {activeView === "chat" && selectedUser && (
+          <div className="flex flex-col h-full">
+            <Header onBack={() => setActiveView("sidebar")} />
+            <Messages />
+            <MessageInput
+              message={message}
+              setMessage={setMessage}
+              sendMessage={sendMessage}
+            />
+          </div>
+        )}
+
       </div>
     </div>
   );
