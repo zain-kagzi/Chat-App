@@ -1,8 +1,10 @@
-import { Phone, Video, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Sun, Moon } from "lucide-react";
 import { useChat } from "../hooks/useChat";
+import { useTheme } from "../hooks/useTheme";
 
 export default function Header({ onBack  }: { onBack?: () => void }) {
   const { selectedUser } = useChat(); // 👈 loggedIn user bhi le liya
+  const { theme, toggleTheme } = useTheme();
 
   // ✅ selected user ka naam
   const name = selectedUser?.username || "Select User";
@@ -44,8 +46,13 @@ export default function Header({ onBack  }: { onBack?: () => void }) {
 
       {/* RIGHT */}
       <div className="flex items-center gap-4">
-        <Phone className="w-5 h-5 text-gray-600 cursor-pointer dark:text-white" />
-        <Video className="w-5 h-5 text-gray-600 cursor-pointer dark:text-white" />
+        <button onClick={toggleTheme}>
+          {theme === "dark" ? (
+            <Sun className="w-5 h-5 text-yellow-400" />
+          ) : (
+            <Moon className="w-5 h-5 text-gray-600" />
+          )}
+        </button>
       </div>
     </div>
   );

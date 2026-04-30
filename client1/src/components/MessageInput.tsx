@@ -1,5 +1,5 @@
 
-import { Mic, MoreHorizontal, Send } from "lucide-react";
+import { Mic, Send } from "lucide-react";
 import { useChat } from "../hooks/useChat";
 
 type Props = {
@@ -18,10 +18,7 @@ export default function MessageInput({
   if (!selectedUser) return null;
 
   return (
-    <div className="p-3 bg-gray-100 border-t flex items-center gap-3 dark:bg-gray-900">
-      
-      {/* Left icon */}
-      <MoreHorizontal className="w-5 h-5 text-gray-500 cursor-pointer" />
+    <div className="p-3 bg-gray-100 border-t flex items-center gap-3 dark:bg-gray-900 dark:border-t dark:border-amber-50">
 
       {/* Input box */}
       <div className="flex items-center flex-1 bg-white rounded-full px-4 py-2 shadow-sm dark:bg-gray-500 dark:text-white">
