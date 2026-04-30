@@ -42,7 +42,7 @@ export default function Sidebar({ onSelectUser }:SidebarProps) {
         {users.map((user: any) => (
           <div
             key={user._id}
-            onClick={() =>{setSelectedUser(user);onSelectUser()} }
+            onClick={() =>{setSelectedUser(user);onSelectUser(user)} }
             className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition ${
               selectedUser === user.username
                 ? "bg-white shadow"
