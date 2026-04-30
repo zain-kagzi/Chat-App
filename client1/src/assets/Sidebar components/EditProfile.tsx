@@ -97,7 +97,7 @@ export default function EditProfileModal({ isOpen, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl w-[320px] p-5 shadow-lg">
+      <div className="bg-white rounded-2xl w-[320px] p-5 shadow-lg dark:bg-gray-700">
         <h2 className="text-lg font-semibold mb-4">Edit Profile</h2>
 
         <div className="flex flex-col items-center gap-2 mb-4">
@@ -127,7 +127,7 @@ export default function EditProfileModal({ isOpen, onClose }: Props) {
         />
 
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="px-3 py-1 rounded bg-gray-200">
+          <button onClick={onClose} className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-900">
             Cancel
           </button>
           <button
