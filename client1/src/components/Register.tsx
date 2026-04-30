@@ -63,7 +63,7 @@ export default function Register({ switchToLogin }: Props) {
         formData.append("profilePic", profilePic);
       }
 
-      const res = await fetch("http://localhost:5000/api/auth/register", {
+      const res = await fetch("https://chat-app-6uvx.onrender.com/api/auth/register", {
         method: "POST",
         body: formData,
       });
