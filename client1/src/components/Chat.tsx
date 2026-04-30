@@ -7,9 +7,10 @@ import MessageInput from "./MessageInput";
 import { useChat } from "../hooks/useChat";
 
 export default function Chat() {
-  const { user, selectedUser, setMessages, setUsers,setSelectedUser } = useChat();
+  const { user, selectedUser, setMessages, setUsers } = useChat();
   const [message, setMessage] = useState("");
   const [activeView, setActiveView] = useState<"sidebar" | "chat">("sidebar");
+  const [loadingMessages, setLoadingMessages] = useState(false);
 
   // ✅ fetch users
   useEffect(() => {
@@ -19,7 +20,7 @@ export default function Chat() {
       .then((res) => res.json())
       .then((data) => {
         const filtered = data.filter(
-          (u: any) => u._id !== user._id // 🔥 FIX (username nahi, id compare)
+          (u: any) => u._id !== user._id, // 🔥 FIX (username nahi, id compare)
         );
         setUsers(filtered);
       })
@@ -27,16 +28,17 @@ export default function Chat() {
   }, [user]);
 
   // ✅ 🔥 ROOM ID using USER roomId
-  const getRoomId = (id1: string, id2: string) =>
-    [id1, id2].sort().join("_");
+  const getRoomId = (id1: string, id2: string) => [id1, id2].sort().join("_");
 
   // ✅ join room + fetch messages
   useEffect(() => {
     if (!selectedUser || !user) return;
 
-    const roomId = getRoomId(user.roomId, selectedUser.roomId); // 🔥 FIX
+    const roomId = getRoomId(user.roomId, selectedUser.roomId);
 
     socket.emit("joinPrivateRoom", { roomId });
+
+    setLoadingMessages(true); // ✅ loading start
 
     fetch(`https://chat-app-6uvx.onrender.com/api/messages/${roomId}`)
       .then((res) => res.json())
@@ -46,8 +48,13 @@ export default function Chat() {
           senderName: msg.sender,
         }));
         setMessages(formatted);
+      })
+      .catch((err) => console.error(err))
+      .finally(() => {
+        setLoadingMessages(false); // ✅ loading end
       });
-      setActiveView("chat");
+
+    setActiveView("chat");
   }, [selectedUser, user]);
 
   // ✅ receive messages
@@ -97,39 +104,45 @@ export default function Chat() {
 
   return (
     <div className="h-screen flex bg-gray-900">
-
       {/* 🖥️ DESKTOP */}
       <div className="hidden md:flex w-full">
-
-        <div className="w-64 border-r">
-          <Sidebar onSelectUser={setSelectedUser}/>
+        <div className="border-r border-dashed dark:border-amber-50">
+          <Sidebar />
         </div>
 
         <div className="flex-1 flex flex-col">
           <Header />
-          <Messages />
+          {loadingMessages ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <Messages />
+          )}
           <MessageInput
             message={message}
             setMessage={setMessage}
             sendMessage={sendMessage}
           />
         </div>
-
       </div>
 
       {/* 📱 MOBILE */}
       <div className="flex-1 md:hidden">
-
         {/* Sidebar */}
-        {activeView === "sidebar" && (
-          <Sidebar onSelectUser={setSelectedUser}/>
-        )}
+        {activeView === "sidebar" && <Sidebar />}
 
         {/* Chat */}
         {activeView === "chat" && selectedUser && (
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-dvh">
             <Header onBack={() => setActiveView("sidebar")} />
-            <Messages />
+            {loadingMessages ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              <Messages />
+            )}
             <MessageInput
               message={message}
               setMessage={setMessage}
@@ -137,7 +150,6 @@ export default function Chat() {
             />
           </div>
         )}
-
       </div>
     </div>
   );

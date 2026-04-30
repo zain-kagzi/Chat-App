@@ -37,8 +37,7 @@ export default function Messages() {
                 </p>
               </div>
 
-              {/* Heart icon (optional like UI) */}
-              <span className="text-gray-400 text-xs cursor-pointer">♡</span>
+              
             </div>
           </div>
         );
