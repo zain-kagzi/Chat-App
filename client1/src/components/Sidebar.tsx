@@ -3,7 +3,11 @@ import { Search, Moon, Sun } from "lucide-react";
 import { useChat } from "../hooks/useChat";
 import { useTheme } from "../hooks/useTheme";
 
-export default function Sidebar({ onSelectUser }) {
+type SidebarProps = {
+  onSelectUser: (user: any) => void;
+};
+
+export default function Sidebar({ onSelectUser }:SidebarProps) {
   const { users, selectedUser, setSelectedUser } = useChat();
   const { theme, toggleTheme } = useTheme();
 
@@ -38,7 +42,7 @@ export default function Sidebar({ onSelectUser }) {
         {users.map((user: any) => (
           <div
             key={user._id}
-            onClick={() =>{setSelectedUser(user);onSelectUser();} }
+            onClick={() =>{setSelectedUser(user);onSelectUser()} }
             className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition ${
               selectedUser === user.username
                 ? "bg-white shadow"

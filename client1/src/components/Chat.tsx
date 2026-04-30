@@ -7,7 +7,7 @@ import MessageInput from "./MessageInput";
 import { useChat } from "../hooks/useChat";
 
 export default function Chat() {
-  const { user, selectedUser, setMessages, setUsers } = useChat();
+  const { user, selectedUser, setMessages, setUsers,setSelectedUser } = useChat();
   const [message, setMessage] = useState("");
   const [activeView, setActiveView] = useState<"sidebar" | "chat">("sidebar");
 
@@ -102,7 +102,7 @@ export default function Chat() {
       <div className="hidden md:flex w-full">
 
         <div className="w-64 border-r">
-          <Sidebar />
+          <Sidebar onSelectUser={setSelectedUser}/>
         </div>
 
         <div className="flex-1 flex flex-col">
@@ -122,7 +122,7 @@ export default function Chat() {
 
         {/* Sidebar */}
         {activeView === "sidebar" && (
-          <Sidebar />
+          <Sidebar onSelectUser={setSelectedUser}/>
         )}
 
         {/* Chat */}
