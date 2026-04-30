@@ -16,7 +16,7 @@ export default function Login({ onLogin, switchToRegister }: Props) {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const res = await fetch("https://chat-app-6uvx.onrender.com/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
