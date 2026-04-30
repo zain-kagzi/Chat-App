@@ -15,7 +15,7 @@ export default function Chat() {
   useEffect(() => {
     if (!user) return;
 
-    fetch("http://localhost:5000/api/auth/users")
+    fetch("https://chat-app-6uvx.onrender.com/api/auth/users")
       .then((res) => res.json())
       .then((data) => {
         const filtered = data.filter(
@@ -38,7 +38,7 @@ export default function Chat() {
 
     socket.emit("joinPrivateRoom", { roomId });
 
-    fetch(`http://localhost:5000/api/messages/${roomId}`)
+    fetch(`https://chat-app-6uvx.onrender.com/api/messages/${roomId}`)
       .then((res) => res.json())
       .then((data) => {
         const formatted = data.map((msg: any) => ({

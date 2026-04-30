@@ -69,7 +69,7 @@ export default function EditProfileModal({ isOpen, onClose }: Props) {
       }
 
       const res = await fetch(
-        "http://localhost:5000/api/user/update-profile",
+        "https://chat-app-6uvx.onrender.com/api/user/update-profile",
         {
           method: "PUT",
           headers: {
