@@ -137,7 +137,7 @@ This project is licensed under the MIT License.
 
 **Zain Kagzi**
 
-- GitHub: [https://github.com/your-username
+- GitHub: [https://github.com/zain-kagzi
 ](https://github.com/zain-kagzi)
 ---
 
