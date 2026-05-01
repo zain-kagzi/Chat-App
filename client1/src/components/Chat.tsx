@@ -110,7 +110,7 @@ export default function Chat() {
           <Sidebar />
         </div>
 
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col h-dvh">
           <Header />
           {loadingMessages ? (
             <div className="flex-1 flex items-center justify-center">
