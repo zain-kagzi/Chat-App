@@ -47,7 +47,7 @@ Chat-App/
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/your-username/chat-app.git
+git clone https://github.com/zain-kagzi/chat-app.git
 cd chat-app
 ```
 
@@ -58,7 +58,7 @@ cd chat-app
 ```bash
 cd server
 npm install
-npm run dev
+node server.js
 ```
 
 ---
@@ -80,7 +80,9 @@ Create a `.env` file inside the `server` folder and add:
 ```
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_secret_key
+CLOUD_NAME=your_cloudinary_server
+CLOUD_API_KEY=your_cloudinary_api
+CLOUD_API_SECRET=your_cloudinary_api_secret
 ```
 
 ---
@@ -135,8 +137,8 @@ This project is licensed under the MIT License.
 
 **Zain Kagzi**
 
-- GitHub: https://github.com/your-username
-
+- GitHub: [https://github.com/your-username
+](https://github.com/zain-kagzi)
 ---
 
 ## ⭐ Support
