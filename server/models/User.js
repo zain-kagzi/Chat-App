@@ -1,29 +1,48 @@
 const mongoose = require("mongoose");
-const crypto = require("crypto");
-
-// ✅ function to generate unique roomId
-const generateRoomId = () => {
-  return crypto.randomBytes(8).toString("hex");
-};
 
 const userSchema = new mongoose.Schema({
-  username: String,
-
-  email: { type: String, unique: true },
-
-  password: String,
-
-  profilePic: {
-    type: String,
-    default: null,
+  username: { 
+    type: String, 
+    required: true, 
+    unique: true,  // ← This creates index automatically
+    trim: true, 
+    minlength: 3, 
+    maxlength: 30 
   },
-
-  // ✅ NEW FIELD
-  roomId: {
-    type: String,
-    unique: true,
-    default: generateRoomId, // 🔥 auto generate
+  email: { 
+    type: String, 
+    required: true, 
+    unique: true,  // ← This creates index automatically
+    trim: true, 
+    lowercase: true 
+  },
+  password: { 
+    type: String, 
+    required: true, 
+    minlength: 6 
+  },
+  profilePic: { 
+    type: String, 
+    default: "" 
+  },
+  roomId: { 
+    type: String, 
+    required: true, 
+    unique: true  // ← This creates index automatically
+  },
+  isOnline: { 
+    type: Boolean, 
+    default: false 
+  },
+  lastSeen: { 
+    type: Date, 
+    default: Date.now 
+  },
+  createdAt: { 
+    type: Date, 
+    default: Date.now 
   },
 });
+
 
 module.exports = mongoose.model("User", userSchema);

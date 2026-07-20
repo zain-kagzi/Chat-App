@@ -1,21 +1,25 @@
 import { useState, useEffect } from "react";
 import imageCompression from "browser-image-compression";
+import toast from "react-hot-toast";
+import { UserPlus, Loader2, Eye, EyeOff } from "lucide-react";
 
 type Props = {
   onRegister: () => void;
   switchToLogin: () => void;
 };
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function Register({ switchToLogin }: Props) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [profilePic, setProfilePic] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
-  // ✅ cleanup memory
   useEffect(() => {
     return () => {
       if (preview) URL.revokeObjectURL(preview);
@@ -24,147 +28,156 @@ export default function Register({ switchToLogin }: Props) {
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-
     if (!file) return;
 
     try {
       const options = {
-        maxSizeMB: 1, // 🔥 final size (1MB)
-        maxWidthOrHeight: 800, // 🔥 resize bhi karega
+        maxSizeMB: 1,
+        maxWidthOrHeight: 800,
         useWebWorker: true,
       };
 
       const compressedFile = await imageCompression(file, options);
-
-      console.log("Original:", file.size / 1024, "KB");
-      console.log("Compressed:", compressedFile.size / 1024, "KB");
-
       setProfilePic(compressedFile);
       setPreview(URL.createObjectURL(compressedFile));
+      toast.success("Image compressed successfully");
     } catch (err) {
-      console.error("Compression error:", err);
+      toast.error("Image compression failed");
+      console.error(err);
     }
   };
 
   const handleRegister = async () => {
-    try {
-      if (!username || !email || !password) {
-        alert("All fields are required");
-        return;
-      }
+    if (!username || !email || !password) {
+      toast.error("All fields are required");
+      return;
+    }
 
+    setLoading(true);
+    const toastId = toast.loading("Creating account...");
+
+    try {
       const formData = new FormData();
       formData.append("username", username);
       formData.append("email", email);
       formData.append("password", password);
 
-      // ✅ only append if selected
       if (profilePic) {
         formData.append("profilePic", profilePic);
       }
 
-      const res = await fetch("https://chat-app-6uvx.onrender.com/api/auth/register", {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         body: formData,
       });
 
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        throw new Error("Invalid server response");
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Registration failed");
       }
 
-      if (res.ok) {
-        alert("Registered successfully! Please login.");
-        switchToLogin();
-      } else {
-        alert(data.message || "Registration failed");
-      }
+      toast.success("Account created! Please login.", { id: toastId });
+      switchToLogin();
     } catch (err: any) {
-      console.error("REGISTER ERROR:", err);
-      alert(err.message || "Registration failed");
+      toast.error(err.message || "Registration failed", { id: toastId });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f0ede8] p-4 font-sans">
       <div className="flex w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl bg-[#faf8f4]">
-        <div className="flex-1 p-8 sm:p-12 flex flex-col justify-center bg-linear-to-br from-[#fdf8ee] to-[#f5e8b0]">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-            Create an account
-          </h2>
-
-          {/* ✅ PROFILE PIC */}
-          <div className="mb-5 flex flex-col items-center">
-            <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 mb-2">
-              <img
-                src={
-                  preview || "https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg" // ✅ default image
-                }
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="text-xs"
-            />
+        <div className="flex-1 p-8 sm:p-12 flex flex-col justify-center bg-gradient-to-br from-[#fdf8ee] to-[#f5e8b0]">
+          <div className="flex items-center gap-2 mb-4">
+            <UserPlus className="w-6 h-6 text-yellow-600" />
+            <h2 className="text-2xl font-semibold text-gray-900">
+              Create an account
+            </h2>
           </div>
 
-          {/* Username */}
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="mb-3 px-4 py-3 rounded-xl"
-          />
+          {/* Profile Pic */}
+          <div className="mb-5 flex flex-col items-center">
+            <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 mb-2 border-4 border-white shadow-lg">
+              <img
+                src={
+                  preview ||
+                  "https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg"
+                }
+                className="w-full h-full object-cover"
+                alt="Profile"
+              />
+            </div>
+            <label className="cursor-pointer text-sm text-blue-600 hover:text-blue-700 font-medium">
+              Upload Photo
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </label>
+          </div>
 
-          {/* Email */}
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mb-3 px-4 py-3 rounded-xl"
-          />
-
-          {/* Password */}
-          <div className="relative mb-4">
+          <div className="space-y-3">
             <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl"
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-yellow-400 focus:outline-none transition"
             />
 
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-yellow-400 focus:outline-none transition"
+            />
+
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-yellow-400 focus:outline-none transition pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+
             <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 text-xs"
+              onClick={handleRegister}
+              disabled={loading}
+              className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:bg-yellow-300 disabled:cursor-not-allowed py-3 rounded-full font-semibold text-gray-900 flex items-center justify-center gap-2 transition"
             >
-              {showPassword ? "Hide" : "Show"}
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                "Register"
+              )}
             </button>
           </div>
 
-          {/* Register */}
-          <button
-            onClick={handleRegister}
-            className="bg-yellow-400 py-3 rounded-full font-semibold"
-          >
-            Register
-          </button>
-
-          {/* Switch */}
-          <p className="text-sm mt-4">
-            Already have account?{" "}
-            <span onClick={switchToLogin} className="underline cursor-pointer">
+          <p className="text-sm mt-4 text-center text-gray-600">
+            Already have an account?{" "}
+            <button
+              onClick={switchToLogin}
+              className="text-blue-600 hover:text-blue-700 font-medium underline"
+            >
               Login
-            </span>
+            </button>
           </p>
         </div>
       </div>
