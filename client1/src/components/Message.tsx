@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useChat } from "../hooks/useChat";
 import { formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, CheckCheck, Smile, Reply, MoreVertical } from "lucide-react";
+import { Check, CheckCheck, Smile, Reply } from "lucide-react";
 import { socket } from "./socket";
 
 type Props = {
@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default function Messages({ isTyping, onReply }: Props) {
-  const { messages, user, selectedUser, setMessages } = useChat();
+  const { messages, user, selectedUser } = useChat();
   const [hoveredMessage, setHoveredMessage] = useState<number | null>(null);
   const [showReactionPicker, setShowReactionPicker] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -23,33 +23,7 @@ export default function Messages({ isTyping, onReply }: Props) {
   }, [messages, isTyping]);
 
   // Listen for reactions
-  useEffect(() => {
-    const handleReaction = (data: any) => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg._id === data.messageId ? { ...msg, reactions: data.reactions } : msg
-        )
-      );
-    };
-
-    const handleRead = (data: any) => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.roomId === data.roomId && msg.senderId !== data.userId
-            ? { ...msg, read: true }
-            : msg
-        )
-      );
-    };
-
-    socket.on("messageReaction", handleReaction);
-    socket.on("messagesRead", handleRead);
-
-    return () => {
-      socket.off("messageReaction", handleReaction);
-      socket.off("messagesRead", handleRead);
-    };
-  }, [setMessages]);
+  
 
   const handleReaction = (messageId: string, emoji: string) => {
     if (!user) return;
@@ -71,12 +45,12 @@ export default function Messages({ isTyping, onReply }: Props) {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4 dark:bg-gray-900">
+    <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 bg-gray-50 space-y-4 dark:bg-gray-900 scroll-smooth h-full min-h-0">
       {messages.length === 0 && !isTyping && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center justify-center h-full text-center"
+          className="flex flex-col items-center justify-center h-full min-h-[200px] text-center"
         >
           <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4">
             <span className="text-4xl">👋</span>
@@ -97,7 +71,6 @@ export default function Messages({ isTyping, onReply }: Props) {
       <AnimatePresence>
         {messages.map((msg, index) => {
           const isMe = msg.senderName === user?.username;
-          const isLast = index === messages.length - 1;
           const reactionCounts = getReactionCounts(msg.reactions);
 
           return (
@@ -105,7 +78,7 @@ export default function Messages({ isTyping, onReply }: Props) {
               key={msg._id || index}
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.3, delay: index * 0.03 }}
+              transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.5) }}
               className={`flex ${isMe ? "justify-end" : "justify-start"}`}
               onMouseEnter={() => setHoveredMessage(index)}
               onMouseLeave={() => {
@@ -124,7 +97,6 @@ export default function Messages({ isTyping, onReply }: Props) {
                 )}
 
                 <div className="group relative">
-                  {/* Reply Preview */}
                   {msg.replyTo && (
                     <div className={`mb-1 px-3 py-1.5 rounded-lg text-xs ${
                       isMe ? "bg-blue-700/50 text-blue-100" : "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
@@ -143,7 +115,6 @@ export default function Messages({ isTyping, onReply }: Props) {
                   >
                     <p className="leading-relaxed">{msg.text}</p>
 
-                    {/* Time & Status */}
                     <div className={`flex items-center gap-1 mt-1 ${isMe ? "justify-end" : "justify-start"}`}>
                       <span className={`text-[10px] ${isMe ? "text-blue-200" : "text-gray-400"}`}>
                         {msg.createdAt
@@ -161,7 +132,6 @@ export default function Messages({ isTyping, onReply }: Props) {
                       )}
                     </div>
 
-                    {/* Reactions Display */}
                     {reactionCounts && Object.keys(reactionCounts).length > 0 && (
                       <motion.div
                         initial={{ scale: 0 }}
@@ -177,7 +147,6 @@ export default function Messages({ isTyping, onReply }: Props) {
                     )}
                   </div>
 
-                  {/* Hover Actions */}
                   <AnimatePresence>
                     {hoveredMessage === index && (
                       <motion.div
@@ -202,7 +171,6 @@ export default function Messages({ isTyping, onReply }: Props) {
                     )}
                   </AnimatePresence>
 
-                  {/* Reaction Picker */}
                   <AnimatePresence>
                     {showReactionPicker === index && (
                       <motion.div
@@ -232,7 +200,6 @@ export default function Messages({ isTyping, onReply }: Props) {
         })}
       </AnimatePresence>
 
-      {/* Typing Indicator */}
       <AnimatePresence>
         {isTyping && (
           <motion.div

@@ -44,7 +44,6 @@ export default function Chat() {
     setUsers,
     setUser,
     setUnreadCounts,
-    messages,
   } = useChat();
   const [message, setMessage] = useState("");
   const [activeView, setActiveView] = useState<"sidebar" | "chat">("sidebar");
@@ -77,44 +76,73 @@ export default function Chat() {
       .catch(() => toast.error("Failed to load users"));
   }, [user, setUsers]);
 
+  // Join room + fetch messages
+  useEffect(() => {
+    if (!selectedUser || !user) return;
+    const roomId = getRoomId(user.roomId, selectedUser.roomId);
+    socket.emit("joinPrivateRoom", { roomId });
+    setLoadingMessages(true);
 
-// Join room + fetch messages
+    // ✅ ADD Authorization header
+    fetch(`${API_URL}/api/messages/${roomId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed");
+        return res.json();
+      })
+      .then((data) => {
+        const messagesList = data.data || data;
+        const formatted = messagesList.map((msg: any) => ({
+          _id: msg._id,
+          text: msg.text,
+          senderName: msg.sender,
+          senderId: msg.senderId,
+          createdAt: msg.createdAt,
+          read: msg.read,
+          reactions: msg.reactions || [],
+          replyTo: msg.replyTo,
+        }));
+        setMessages(formatted);
+        socket.emit("markAsRead", { roomId, userId: user._id });
+      })
+      .catch(() => toast.error("Failed to load messages"))
+      .finally(() => setLoadingMessages(false));
+
+    setActiveView("chat");
+  }, [selectedUser, user, setMessages, getRoomId]);
+
+  // ✅ GLOBAL: Message reaction listener (always active, not dependent on selectedUser)
 useEffect(() => {
-  if (!selectedUser || !user) return;
-  const roomId = getRoomId(user.roomId, selectedUser.roomId);
-  socket.emit("joinPrivateRoom", { roomId });
-  setLoadingMessages(true);
+  const handleReaction = (data: any) => {
+    console.log("🔥 Reaction received:", data); // Debug
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg._id === data.messageId ? { ...msg, reactions: data.reactions } : msg
+      )
+    );
+  };
 
-  // ✅ ADD Authorization header
-  fetch(`${API_URL}/api/messages/${roomId}`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  })
-    .then((res) => {
-      if (!res.ok) throw new Error("Failed");
-      return res.json();
-    })
-    .then((data) => {
-      const messagesList = data.data || data;
-      const formatted = messagesList.map((msg: any) => ({
-        _id: msg._id,
-        text: msg.text,
-        senderName: msg.sender,
-        senderId: msg.senderId,
-        createdAt: msg.createdAt,
-        read: msg.read,
-        reactions: msg.reactions || [],
-        replyTo: msg.replyTo,
-      }));
-      setMessages(formatted);
-      socket.emit("markAsRead", { roomId, userId: user._id });
-    })
-    .catch(() => toast.error("Failed to load messages"))
-    .finally(() => setLoadingMessages(false));
+  const handleRead = (data: any) => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.roomId === data.roomId && msg.senderId !== data.userId
+          ? { ...msg, read: true }
+          : msg
+      )
+    );
+  };
 
-  setActiveView("chat");
-}, [selectedUser, user, setMessages, getRoomId]);
+  socket.on("messageReaction", handleReaction);
+  socket.on("messagesRead", handleRead);
+
+  return () => {
+    socket.off("messageReaction", handleReaction);
+    socket.off("messagesRead", handleRead);
+  };
+}, [setMessages]); // ✅ Only depends on setMessages
 
   // Socket events
   useEffect(() => {
@@ -123,6 +151,8 @@ useEffect(() => {
 
     const handleMessage = (msg: any) => {
       if (msg.roomId === currentRoom) {
+        // Skip if message is from current user
+        if (msg.senderId === user?._id) return;
         setMessages((prev) => [...prev, msg]);
         // Mark as read if we're in the room
         socket.emit("markAsRead", { roomId: currentRoom, userId: user._id });
@@ -231,9 +261,9 @@ useEffect(() => {
 
   return (
     <div className="h-screen flex bg-gray-50 dark:bg-gray-950">
-      <div className="hidden md:flex w-full">
+      <div className="hidden md:flex w-full h-screen">
         <Sidebar onLogout={handleLogout} />
-        <div className="flex-1 flex flex-col h-dvh">
+        <div className="flex-1 flex flex-col h-full min-h-0">
           <Header />
           <AnimatePresence mode="wait">
             {loadingMessages ? (
@@ -242,6 +272,7 @@ useEffect(() => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
+                className="flex-1 min-h-0"
               >
                 <MessageSkeleton />
               </motion.div>
@@ -251,7 +282,7 @@ useEffect(() => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex-1 flex flex-col"
+                className="flex-1 flex flex-col min-h-0"
               >
                 <Messages isTyping={isTyping} onReply={setReplyTo} />
               </motion.div>
@@ -267,15 +298,19 @@ useEffect(() => {
         </div>
       </div>
 
-      <div className="flex-1 md:hidden">
+      <div className="flex-1 md:hidden h-screen">
         {activeView === "sidebar" && <Sidebar onLogout={handleLogout} />}
         {activeView === "chat" && selectedUser && (
-          <div className="flex flex-col h-dvh">
+          <div className="flex flex-col h-full min-h-0">
             <Header onBack={() => setActiveView("sidebar")} />
             {loadingMessages ? (
-              <MessageSkeleton />
+              <div className="flex-1 min-h-0">
+                <MessageSkeleton />
+              </div>
             ) : (
-              <Messages isTyping={isTyping} onReply={setReplyTo} />
+              <div className="flex-1 min-h-0">
+                <Messages isTyping={isTyping} onReply={setReplyTo} />
+              </div>
             )}
             <MessageInput
               message={message}
